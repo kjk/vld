@@ -2742,22 +2742,16 @@ void VisualLeakDetector::setupReporting()
         // Unicode data encoding has been enabled. Write the byte-order
         // mark before anything else gets written to the file. Open the
         // file for binary writing.
-        if (_wfopen_s(&m_reportFile, m_reportFilePath, L"wb") == EINVAL) {
-            // Couldn't open the file.
-            m_reportFile = NULL;
-        }
-        else if (m_reportFile) {
+        m_reportFile = _wfsopen(m_reportFilePath, L"wb", _SH_DENYWR);
+        if (m_reportFile) {
             fwrite(&bom, sizeof(WCHAR), 1, m_reportFile);
             SetReportEncoding(unicode);
         }
     }
     else {
         // Open the file in text mode for ASCII output.
-        if (_wfopen_s(&m_reportFile, m_reportFilePath, L"w") == EINVAL) {
-            // Couldn't open the file.
-            m_reportFile = NULL;
-        }
-        else if (m_reportFile) {
+        m_reportFile = _wfsopen(m_reportFilePath, L"w", _SH_DENYWR);
+        if (m_reportFile) {
             SetReportEncoding(ascii);
         }
     }
