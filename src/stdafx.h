@@ -1,14 +1,15 @@
 #pragma once
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
-
 #include <cassert>
 #include <cerrno>
 #include <cstdio>
-#include <windows.h>
-#if _WIN32_WINNT < 0x0600 // Windows XP or earlier, no GetProcessIdOfThread()
+
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+
+#include <Windows.h>
+#if _WIN32_WINNT <= 0x0600 // Windows XP or earlier, no GetProcessIdOfThread()
 #include <winternl.h>
 #endif
 #ifndef __out_xcount

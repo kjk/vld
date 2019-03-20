@@ -60,7 +60,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\lib\;$(SolutionDir)\lib\dbghelp\include;$(SolutionDir)\setup;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\lib\;$(SolutionDir)\lib\dbghelp\include;$(SolutionDir)\setup;C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
