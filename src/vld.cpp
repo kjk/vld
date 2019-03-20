@@ -1467,15 +1467,15 @@ VOID VisualLeakDetector::unmapBlock (HANDLE heap, LPCVOID mem, const context_t &
                 Report(L"---------- Block %Iu at " ADDRESSFORMAT L": %Iu bytes ----------\n", alloc_block->serialNumber, mem, alloc_block->size);
                 Report(L"  TID: %u\n", alloc_block->threadId);
                 Report(L"  Call Stack:\n");
-                alloc_block->callStack->dump(m_options & VLD_OPT_TRACE_INTERNAL_FRAMES);
+                alloc_block->callStack->dump(m_options & VLD_OPT_TRACE_INTERNAL_FRAMES, m_options & VLD_OPT_SKIP_CRTSTARTUP_LEAKS);
 
                 // Now we need a way to print the current callstack at this point:
-                CallStack* stack_here = CallStack::Create();
+                CallStack* stack_here = CallStack::Create(m_options & VLD_OPT_SAFE_STACK_WALK);
                 stack_here->getStackTrace(m_maxTraceFrames, context);
                 Report(L"Deallocation Call stack.\n");
                 Report(L"---------- Block %Iu at " ADDRESSFORMAT L": %Iu bytes ----------\n", alloc_block->serialNumber, mem, alloc_block->size);
                 Report(L"  Call Stack:\n");
-                stack_here->dump(FALSE);
+                stack_here->dump(FALSE, m_options & VLD_OPT_SKIP_CRTSTARTUP_LEAKS);
                 // Now it should be safe to delete our temporary callstack
                 delete stack_here;
                 stack_here = NULL;
@@ -1906,7 +1906,7 @@ SIZE_T VisualLeakDetector::reportLeaks (heapinfo_t* heapinfo, bool &firstLeak, S
         else
             Report(L"  Call Stack:\n");
         if (info->callStack)
-            info->callStack->dump(m_options & VLD_OPT_TRACE_INTERNAL_FRAMES);
+            info->callStack->dump(m_options & VLD_OPT_TRACE_INTERNAL_FRAMES, m_options & VLD_OPT_SKIP_CRTSTARTUP_LEAKS);
 
         // Dump the data in the user data section of the memory block.
         if (m_maxDataDump != 0) {
@@ -2813,9 +2813,9 @@ const wchar_t* VisualLeakDetector::GetAllocationResolveResults(void* alloc, BOOL
     blockinfo_t* info = getAllocationBlockInfo(alloc);
     if (info != NULL)
     {
-        int unresolvedFunctionsCount = info->callStack->resolve(showInternalFrames);
+        int unresolvedFunctionsCount = info->callStack->resolve(showInternalFrames, m_options & VLD_OPT_SKIP_CRTSTARTUP_LEAKS);
         _ASSERT(unresolvedFunctionsCount == 0);
-        return info->callStack->getResolvedCallstack(showInternalFrames);
+        return info->callStack->getResolvedCallstack(showInternalFrames, m_options & VLD_OPT_SKIP_CRTSTARTUP_LEAKS);
     }
     return NULL;
 }
@@ -2865,7 +2865,7 @@ int VisualLeakDetector::resolveStacks(heapinfo_t* heapinfo)
         // Dump the call stack.
         if (info->callStack)
         {
-            unresolvedFunctionsCount += info->callStack->resolve(m_options & VLD_OPT_TRACE_INTERNAL_FRAMES);
+            unresolvedFunctionsCount += info->callStack->resolve(m_options & VLD_OPT_TRACE_INTERNAL_FRAMES, m_options & VLD_OPT_SKIP_CRTSTARTUP_LEAKS);
             if ((m_options & VLD_OPT_SKIP_CRTSTARTUP_LEAKS) && info->callStack->isCrtStartupAlloc()) {
                 info->reported = true;
                 continue;
@@ -2920,7 +2920,7 @@ CaptureContext::~CaptureContext() {
         return;
 
     if ((m_tls->blockWithoutGuard) && (!IsExcludedModule())) {
-        CallStack* callstack = CallStack::Create();
+        CallStack* callstack = CallStack::Create(g_vld.m_options & VLD_OPT_SAFE_STACK_WALK);
         callstack->getStackTrace(g_vld.m_maxTraceFrames, m_tls->context);
 
         CriticalSectionLocker<> cs(g_heapMapLock);
